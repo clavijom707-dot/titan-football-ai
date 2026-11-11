@@ -7,16 +7,18 @@ import datetime
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Titan Football AI PRO", page_icon="⚽", layout="wide")
 
-# --- DISEÑO VISUAL ---
+# --- DISEÑO VISUAL (Con ocultamiento total del gatito y menús) ---
 st.markdown("""
     <style>
-    #MainMenu {visibility: hidden;}
+    /* OCULTAR TODO LO DE PROGRAMADOR */
+    #MainMenu {visibility: hidden; display: none !important;}
     footer {visibility: hidden;}
-    .stDeployButton {display: none !important;}
+    header {visibility: hidden; display: none !important;}
+    [data-testid="stToolbar"] {visibility: hidden; display: none !important;}
+    [data-testid="stStatusWidget"] {visibility: hidden; display: none !important;}
     
+    /* DISEÑO GENERAL */
     html, body, [data-testid="stAppViewContainer"], .stApp { background-color: #0e1117 !important; color: #ffffff !important; }
-    [data-testid="stHeader"] { background-color: #0e1117 !important; background: #0e1117 !important; }
-    
     h1, h2, h3, p, span, label { color: #ffffff !important; font-family: 'Helvetica Neue', sans-serif; }
     
     .big-title { font-size: 3.5rem; font-weight: 900; color: #00ff87 !important; text-align: center; margin-bottom: 0; }
@@ -42,13 +44,8 @@ st.markdown("""
     .stTabs [data-baseweb="tab"] { font-size: 1.2rem; font-weight: bold; color: #ffffff; }
     .stTabs [aria-selected="true"] { color: #00ff87 !important; border-bottom-color: #00ff87 !important; }
 
-    .contexto-box {
-        background-color: #1e2530; border: 1px solid #00ff87; border-radius: 8px;
-        padding: 10px 15px; margin-bottom: 15px; font-size: 0.9rem; color: #a0aab5 !important;
-    }
-    .sidebar-info {
-        background-color: #1e2530; border-radius: 8px; padding: 10px; color: #a0aab5 !important; font-size: 0.9rem;
-    }
+    .contexto-box { background-color: #1e2530; border: 1px solid #00ff87; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; font-size: 0.9rem; color: #a0aab5 !important; }
+    .sidebar-info { background-color: #1e2530; border-radius: 8px; padding: 10px; color: #a0aab5 !important; font-size: 0.9rem; }
     .stAlert > div { background-color: #1e2530 !important; color: #00ff87 !important; border: 1px solid #00ff87 !important; }
     .stAlert p { color: #ffffff !important; }
     </style>
@@ -95,9 +92,14 @@ def buscar_noticias_reales(equipo, liga):
     except Exception: return "Servicio de noticias no disponible."
 
 def obtener_partidos_liga(slug_liga):
-    hoy = datetime.datetime.now()
+    # ARREGLO DE HORA: Forzamos la hora de Ecuador (UTC-5) restando 5 horas al servidor
+    ahora_utc = datetime.datetime.utcnow()
+    ahora_ecuador = ahora_utc - datetime.timedelta(hours=5)
+    
+    hoy = ahora_ecuador
     fecha_fin = hoy + datetime.timedelta(days=30)
     rango_fechas = f"{hoy.strftime('%Y%m%d')}-{fecha_fin.strftime('%Y%m%d')}"
+    
     url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{slug_liga}/scoreboard?dates={rango_fechas}&limit=100"
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -109,20 +111,21 @@ def obtener_partidos_liga(slug_liga):
                 competencias = ev.get("competitions", [])
                 if competencias:
                     competidores = competencias[0].get("competitors", [])
-                    if len(competidores) == 2:
-                        eq1 = competidores[0].get("team", {}).get("displayName", "TBD")
-                        eq2 = competidores[1].get("team", {}).get("displayName", "TBD")
-                        fecha_str = ev.get("date", "")
-                        hora_formateada = "Hora TBD"
-                        timestamp = 0
-                        if fecha_str:
-                            try:
-                                dt = datetime.datetime.fromisoformat(fecha_str.replace("Z", "+00:00"))
-                                dt_ec = dt - datetime.timedelta(hours=5)
-                                hora_formateada = f"{dt_ec.day} {meses[dt_ec.month]} - {dt_ec.strftime('%H:%M')}"
-                                timestamp = dt.timestamp()
-                            except: pass
-                        partidos.append({"local": eq1, "visitante": eq2, "fecha_hora": hora_formateada, "timestamp": timestamp})
+                    if len(competencias) == 2 or len(competencias) > 0:
+                        if len(competencias[0].get("competitors", [])) == 2:
+                            eq1 = competencias[0].get("competitors", [])[0].get("team", {}).get("displayName", "TBD")
+                            eq2 = competencias[0].get("competitors", [])[1].get("team", {}).get("displayName", "TBD")
+                            fecha_str = ev.get("date", "")
+                            hora_formateada = "Hora TBD"
+                            timestamp = 0
+                            if fecha_str:
+                                try:
+                                    dt = datetime.datetime.fromisoformat(fecha_str.replace("Z", "+00:00"))
+                                    dt_ec = dt - datetime.timedelta(hours=5)
+                                    hora_formateada = f"{dt_ec.day} {meses[dt_ec.month]} - {dt_ec.strftime('%H:%M')}"
+                                    timestamp = dt.timestamp()
+                                except: pass
+                            partidos.append({"local": eq1, "visitante": eq2, "fecha_hora": hora_formateada, "timestamp": timestamp})
             partidos.sort(key=lambda x: x['timestamp'])
             return partidos
     except Exception: return None
