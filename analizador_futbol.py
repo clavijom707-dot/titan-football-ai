@@ -7,34 +7,36 @@ import datetime
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Titan Football AI PRO", page_icon="⚽", layout="wide")
 
-# --- DISEÑO VISUAL (Flechitas restauradas, gatito oculto, hora arreglada) ---
+# --- DISEÑO VISUAL DEFINITIVO (Sin franja blanca, con flechitas fijas) ---
 st.markdown("""
     <style>
-    /* Ocultar menús y botón de Deploy */
+    /* 1. ELIMINAR LA FRANJA BLANCA Y EL GATITO DE ARRIBA */
+    header {display: none !important;}
+    [data-testid="stHeader"] {display: none !important;}
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     .stDeployButton {display: none !important;}
     
-    /* Ocultar SOLO el gatito y los iconos de arriba a la derecha, SIN borrar la cabecera */
-    [data-testid="stToolbar"] {visibility: hidden;}
-    
-    /* RESTAURAR Y FORZAR LAS FLECHITAS */
+    /* 2. RESCATAR LAS FLECHITAS Y PONERLAS FLOTANDO A LA IZQUIERDA */
     [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] {
         display: block !important;
         visibility: visible !important;
+        position: fixed !important;
+        top: 50% !important;
+        left: 0px !important;
+        z-index: 9999999 !important;
         background-color: #161b22 !important;
         border: 1px solid #00ff87 !important;
         border-radius: 0 5px 5px 0 !important;
-        padding: 8px !important;
-        z-index: 999999 !important;
-        top: 50% !important;
+        padding: 10px !important;
     }
     [data-testid="collapsedControl"] svg, [data-testid="stSidebarCollapsedControl"] svg {
         fill: #00ff87 !important;
         color: #00ff87 !important;
+        font-size: 20px !important;
     }
     
-    /* ESTILOS GENERALES */
+    /* 3. ESTILOS GENERALES OSCUROS */
     html, body, [data-testid="stAppViewContainer"], .stApp { background-color: #0e1117 !important; color: #ffffff !important; }
     h1, h2, h3, p, span, label { color: #ffffff !important; font-family: 'Helvetica Neue', sans-serif; }
     
@@ -103,7 +105,7 @@ def buscar_noticias_reales(equipo, liga):
     except Exception: return "Servicio de noticias no disponible."
 
 def obtener_partidos_liga(slug_liga):
-    # ARREGLO DE HORA: Forzamos la hora de Ecuador (UTC-5) usando la hora actual del servidor
+    # ARREGLO DE HORA: Forzamos la hora de Ecuador (UTC-5) restando 5 horas al servidor
     ahora_utc = datetime.datetime.now(datetime.timezone.utc)
     ahora_ecuador = ahora_utc - datetime.timedelta(hours=5)
     
