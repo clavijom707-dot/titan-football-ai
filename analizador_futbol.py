@@ -5,37 +5,39 @@ import urllib.parse
 import datetime
 
 # --- CONFIGURACIÓN DE PÁGINA ---
-st.set_page_config(page_title="Titan Football AI PRO", page_icon="⚽", layout="wide")
+st.set_page_config(page_title="Titan Football AI PRO", page_icon="⚽", layout="wide", initial_sidebar_state="collapsed")
 
-# --- DISEÑO VISUAL DEFINITIVO (Sin franja blanca, con flechitas) ---
+# --- DISEÑO VISUAL DEFINITIVO ---
 st.markdown("""
     <style>
-    /* 1. HACEMOS LA CABECERA INVISIBLE EN LUGAR DE BORRARLA */
+    /* 1. PINTAMOS LA CABECERA DE NEGRO (Adiós franja blanca) */
     [data-testid="stHeader"] {
-        background-color: transparent !important;
-        background: transparent !important;
+        background-color: #0e1117 !important;
+        background: #0e1117 !important;
+        color: #ffffff !important;
     }
     
-    /* 2. OCULTAMOS SOLO EL GATITO Y LOS BOTONES DE PROGRAMADOR */
+    /* 2. OCULTAMOS EL GATITO Y EL BOTÓN DE DEPLOY */
     [data-testid="stToolbar"] {display: none !important;}
     .stDeployButton {display: none !important;}
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     
-    /* 3. RESCATAMOS Y PINTAMOS LAS FLECHITAS */
+    /* 3. RESCATAMOS LAS FLECHITAS Y LAS HACEMOS GIGANTES Y VERDES */
     [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] {
-        display: block !important;
+        display: flex !important;
         visibility: visible !important;
-        background-color: #161b22 !important;
+        z-index: 9999999 !important;
+        background-color: #1e2530 !important;
         border: 1px solid #00ff87 !important;
-        border-radius: 0 5px 5px 0 !important;
-        padding: 8px !important;
-        z-index: 999999 !important;
-        top: 50% !important;
+        border-radius: 5px !important;
+        padding: 5px !important;
     }
     [data-testid="collapsedControl"] svg, [data-testid="stSidebarCollapsedControl"] svg {
         fill: #00ff87 !important;
         color: #00ff87 !important;
+        width: 30px !important;
+        height: 30px !important;
     }
     
     /* 4. ESTILOS GENERALES OSCUROS */
