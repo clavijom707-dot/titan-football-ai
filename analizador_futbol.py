@@ -5,43 +5,17 @@ import urllib.parse
 import datetime
 
 # --- CONFIGURACIÓN DE PÁGINA ---
-st.set_page_config(page_title="Titan Football AI PRO", page_icon="⚽", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Titan Football AI PRO", page_icon="⚽", layout="wide")
 
-# --- DISEÑO VISUAL DEFINITIVO ---
+# --- DISEÑO VISUAL (De vuelta a lo que funcionaba anoche) ---
 st.markdown("""
     <style>
-    /* 1. PINTAMOS LA CABECERA DE NEGRO (Adiós franja blanca) */
-    [data-testid="stHeader"] {
-        background-color: #0e1117 !important;
-        background: #0e1117 !important;
-        color: #ffffff !important;
-    }
-    
-    /* 2. OCULTAMOS EL GATITO Y EL BOTÓN DE DEPLOY */
-    [data-testid="stToolbar"] {display: none !important;}
-    .stDeployButton {display: none !important;}
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+    .stDeployButton {display:none;}
     
-    /* 3. RESCATAMOS LAS FLECHITAS Y LAS HACEMOS GIGANTES Y VERDES */
-    [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] {
-        display: flex !important;
-        visibility: visible !important;
-        z-index: 9999999 !important;
-        background-color: #1e2530 !important;
-        border: 1px solid #00ff87 !important;
-        border-radius: 5px !important;
-        padding: 5px !important;
-    }
-    [data-testid="collapsedControl"] svg, [data-testid="stSidebarCollapsedControl"] svg {
-        fill: #00ff87 !important;
-        color: #00ff87 !important;
-        width: 30px !important;
-        height: 30px !important;
-    }
-    
-    /* 4. ESTILOS GENERALES OSCUROS */
-    html, body, [data-testid="stAppViewContainer"], .stApp { background-color: #0e1117 !important; color: #ffffff !important; }
+    /* Estilos visuales de la clínica (tus colores y diseño oscuro) */
+    .stApp {background-color: #0e1117 !important;}
     h1, h2, h3, p, span, label { color: #ffffff !important; font-family: 'Helvetica Neue', sans-serif; }
     
     .big-title { font-size: 3.5rem; font-weight: 900; color: #00ff87 !important; text-align: center; margin-bottom: 0; }
@@ -109,6 +83,7 @@ def buscar_noticias_reales(equipo, liga):
     except Exception: return "Servicio de noticias no disponible."
 
 def obtener_partidos_liga(slug_liga):
+    # ARREGLO DE HORA: Forzamos la hora de Ecuador (UTC-5)
     ahora_utc = datetime.datetime.now(datetime.timezone.utc)
     ahora_ecuador = ahora_utc - datetime.timedelta(hours=5)
     
