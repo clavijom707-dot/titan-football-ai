@@ -5,17 +5,41 @@ import urllib.parse
 import datetime
 
 # --- CONFIGURACIÓN DE PÁGINA ---
-st.set_page_config(page_title="Titan Football AI PRO", page_icon="⚽", layout="wide")
+st.set_page_config(page_title="Titan Football AI PRO", page_icon="⚽", layout="wide", initial_sidebar_state="collapsed")
 
-# --- DISEÑO VISUAL (De vuelta a lo que funcionaba anoche) ---
+# --- DISEÑO VISUAL DEFINITIVO ---
 st.markdown("""
     <style>
+    /* 1. HACEMOS LA CABECERA INVISIBLE (Adiós franja blanca) */
+    [data-testid="stHeader"] {
+        background-color: #0e1117 !important;
+        background: #0e1117 !important;
+    }
+    
+    /* 2. OCULTAMOS EL GATITO Y EL BOTÓN DE DEPLOY */
+    [data-testid="stToolbar"] {display: none !important;}
+    .stDeployButton {display: none !important;}
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    .stDeployButton {display:none;}
     
-    /* Estilos visuales de la clínica (tus colores y diseño oscuro) */
-    .stApp {background-color: #0e1117 !important;}
+    /* 3. RESCATAMOS LAS FLECHITAS Y LAS HACEMOS VERDES */
+    [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] {
+        display: block !important;
+        visibility: visible !important;
+        background-color: #161b22 !important;
+        border: 1px solid #00ff87 !important;
+        border-radius: 0 5px 5px 0 !important;
+        padding: 8px !important;
+        z-index: 999999 !important;
+        top: 50% !important;
+    }
+    [data-testid="collapsedControl"] svg, [data-testid="stSidebarCollapsedControl"] svg {
+        fill: #00ff87 !important;
+        color: #00ff87 !important;
+    }
+    
+    /* 4. ESTILOS GENERALES OSCUROS */
+    html, body, [data-testid="stAppViewContainer"], .stApp { background-color: #0e1117 !important; color: #ffffff !important; }
     h1, h2, h3, p, span, label { color: #ffffff !important; font-family: 'Helvetica Neue', sans-serif; }
     
     .big-title { font-size: 3.5rem; font-weight: 900; color: #00ff87 !important; text-align: center; margin-bottom: 0; }
@@ -83,15 +107,8 @@ def buscar_noticias_reales(equipo, liga):
     except Exception: return "Servicio de noticias no disponible."
 
 def obtener_partidos_liga(slug_liga):
-    # ARREGLO DE HORA: Forzamos la hora de Ecuador (UTC-5)
-    ahora_utc = datetime.datetime.now(datetime.timezone.utc)
-    ahora_ecuador = ahora_utc - datetime.timedelta(hours=5)
-    
-    hoy = ahora_ecuador
-    fecha_fin = hoy + datetime.timedelta(days=30)
-    rango_fechas = f"{hoy.strftime('%Y%m%d')}-{fecha_fin.strftime('%Y%m%d')}"
-    
-    url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{slug_liga}/scoreboard?dates={rango_fechas}&limit=100"
+    # SOLUCIÓN AL AÑO 2026: Quitamos el filtro de fechas para que ESPN devuelva los partidos reales actuales.
+    url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{slug_liga}/scoreboard?limit=100"
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=10) as response:
