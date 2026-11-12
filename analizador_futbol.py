@@ -10,7 +10,7 @@ st.set_page_config(page_title="Titan Football AI PRO", page_icon="⚽", layout="
 # --- DISEÑO VISUAL DEFINITIVO ---
 st.markdown("""
     <style>
-    /* 1. HACEMOS LA CABECERA INVISIBLE (Adiós franja blanca) */
+    /* 1. QUITAMOS LA FRANJA BLANCA (Pintamos el header de oscuro) */
     [data-testid="stHeader"] {
         background-color: #0e1117 !important;
         background: #0e1117 !important;
@@ -21,21 +21,27 @@ st.markdown("""
     .stDeployButton {display: none !important;}
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    
-    /* 3. RESCATAMOS LAS FLECHITAS Y LAS HACEMOS VERDES */
+
+    /* 3. LA MAGIA: FLECHITA FLOTANTE A LA IZQUIERDA (Independiente del header) */
     [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] {
         display: block !important;
         visibility: visible !important;
-        background-color: #161b22 !important;
-        border: 1px solid #00ff87 !important;
-        border-radius: 0 5px 5px 0 !important;
-        padding: 8px !important;
-        z-index: 999999 !important;
+        position: fixed !important;
+        left: 0px !important;
         top: 50% !important;
+        transform: translateY(-50%) !important;
+        background-color: #1e2530 !important;
+        border: 2px solid #00ff87 !important;
+        border-radius: 0 8px 8px 0 !important;
+        padding: 10px !important;
+        z-index: 9999999 !important;
     }
+    /* Hacemos la flechita más grande y verde */
     [data-testid="collapsedControl"] svg, [data-testid="stSidebarCollapsedControl"] svg {
         fill: #00ff87 !important;
         color: #00ff87 !important;
+        width: 30px !important;
+        height: 30px !important;
     }
     
     /* 4. ESTILOS GENERALES OSCUROS */
