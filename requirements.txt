@@ -2,3 +2,6 @@ streamlit==1.41.0
 pandas==2.2.3
 pyarrow==22.0.0
 openai
+streamlit-authenticator==0.3.2
+bcrypt
+PyYAML
