@@ -1,106 +1,106 @@
 import streamlit as st
 from openai import OpenAI
 
-# 1. Configuración de la página (Debe ser lo primero)
+# 1. Configuración de la página (Diseño ancho)
 st.set_page_config(page_title="Titan Football AI", page_icon="⚽", layout="wide")
 
-# 2. Estilos CSS para el diseño oscuro y elegante
+# 2. Estilos CSS para replicar tu diseño original (Verde neón y fondo oscuro)
 st.markdown("""
     <style>
     /* Fondo general oscuro */
     .stApp {
-        background-color: #0e1117;
+        background-color: #0b131e;
         color: #ffffff;
     }
     
-    /* Ocultar menús de Streamlit */
+    /* Ocultar menús */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     
-    /* Estilo del título principal */
-    .titulo-principal {
-        text-align: center;
-        color: #00ffcc;
-        font-size: 3rem;
-        font-weight: bold;
-        margin-bottom: 0px;
-    }
-    
-    .subtitulo {
-        text-align: center;
-        color: #a0a0a0;
-        font-size: 1.2rem;
-        margin-bottom: 30px;
-    }
-
-    /* Cuadros de texto */
-    .stTextInput>div>div>input {
-        background-color: #1e2130;
-        color: white;
-        border: 1px solid #00ffcc;
+    /* Cuadros de texto con borde verde */
+    .stTextInput>div>div>input, .stTextArea>div>div>textarea {
+        background-color: #0b131e !important;
+        color: #ffffff !important;
+        border: 1px solid #34d399 !important;
         border-radius: 8px;
     }
     
-    /* Botón principal */
+    /* Botones verdes neón */
     .stButton>button {
-        background-color: #00ffcc;
-        color: black;
-        font-weight: bold;
-        border-radius: 8px;
-        width: 100%;
-        height: 50px;
-        font-size: 1.2rem;
-        transition: 0.3s;
+        background-color: #34d399 !important; /* Color verde de tu foto */
+        color: black !important;
+        font-weight: bold !important;
+        border-radius: 8px !important;
+        border: none !important;
+        padding: 10px 20px !important;
     }
     .stButton>button:hover {
-        background-color: #00ccaa;
-        transform: scale(1.02);
+        background-color: #10b981 !important;
+    }
+    
+    /* Color del texto de los labels */
+    .stTextInput label, .stTextArea label, .stCheckbox label {
+        color: #ffffff !important;
+        font-weight: 500;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# 3. Conexión segura a DeepSeek
+# 3. Conexión a DeepSeek
 try:
     api_key = st.secrets["DEEPSEEK_TOKEN"]
     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
 except Exception as e:
-    st.error(f"Error de configuración: Falta DEEPSEEK_TOKEN en los Secrets de Streamlit.")
+    st.error("Error: Falta DEEPSEEK_TOKEN en los Secrets.")
     st.stop()
 
-# 4. Interfaz visual de usuario
-st.markdown('<div class="titulo-principal">⚽ Titan Football AI</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitulo">Ingresa los equipos para generar un análisis táctico profundo con Inteligencia Artificial.</div>', unsafe_allow_html=True)
+# 4. Interfaz visual (Idéntica a tu foto)
+# Botón superior (Si tenías una función para esto, agrégala después)
+st.button("🔍 Buscar Próximos Partidos")
 
-# Columnas para los equipos
+# Fila de equipos
 col1, col2 = st.columns(2)
 with col1:
-    equipo_local = st.text_input("🏠 Equipo Local", placeholder="Ej: Real Madrid")
+    equipo_local = st.text_input("Equipo Local")
 with col2:
-    equipo_visitante = st.text_input("✈️ Equipo Visitante", placeholder="Ej: Barcelona")
+    equipo_visitante = st.text_input("Equipo Visitante")
+
+# Contexto y Modo Kalshi
+contexto = st.text_area("Contexto Adicional (Opcional)")
+modo_kalshi = st.checkbox("💡 Activar Modo Kalshi (Análisis para Mercados de Predicción)")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# 5. Botón de acción y llamado a la IA
-if st.button("GENERAR ANÁLISIS TÁCTICO"):
+# Botón de análisis principal
+if st.button("🔴 ANALIZAR PARTIDO"):
     if not equipo_local or not equipo_visitante:
-        st.warning("Por favor, escribe el nombre de ambos equipos.")
+        st.warning("Por favor, ingresa el nombre de ambos equipos.")
     else:
-        with st.spinner("Analizando tácticas, estadísticas y jugadores..."):
+        with st.spinner("Analizando el partido..."):
             try:
-                # Llamada a la API de DeepSeek
+                # Creamos las instrucciones dependiendo de si Kalshi está activo
+                system_prompt = "Eres un analista experto de fútbol. Da pronósticos tácticos, estadísticas y posibles resultados."
+                
+                if modo_kalshi:
+                    system_prompt += " Además, eres un experto en mercados de predicción (como Kalshi). Proporciona probabilidades estimadas, valor esperado y sugerencias de trading/apuestas basadas en el partido."
+                
+                user_prompt = f"Analiza el partido entre {equipo_local} y {equipo_visitante}."
+                if contexto:
+                    user_prompt += f" Ten en cuenta este contexto adicional: {contexto}"
+
+                # Llamada a DeepSeek
                 respuesta = client.chat.completions.create(
                     model="deepseek-chat",
                     messages=[
-                        {"role": "system", "content": "Eres un analista experto de fútbol. Da pronósticos tácticos, estadísticas y posibles resultados. Usa un tono profesional."},
-                        {"role": "user", "content": f"Analiza el partido entre {equipo_local} y {equipo_visitante}."}
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
                     ]
                 )
                 
-                # Mostrar el resultado con éxito
+                # Mostrar resultado
                 st.success("¡Análisis completado!")
                 st.markdown("---")
                 st.markdown(respuesta.choices[0].message.content)
                 
             except Exception as e:
-                # Si hay un error con la API, se muestra aquí y no se congela la pantalla
                 st.error(f"Hubo un error al conectar con DeepSeek: {e}")
