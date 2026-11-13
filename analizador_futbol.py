@@ -4,42 +4,39 @@ import urllib.request
 import urllib.parse
 import datetime
 from openai import OpenAI
-import streamlit_authenticator as stauth
-import pandas as pd
 
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Titan Football AI PRO", page_icon="⚽", layout="wide", initial_sidebar_state="collapsed")
 
-# --- SISTEMA DE LOGIN ---
-try:
-    # Convertimos los secrets a diccionarios normales para evitar el TypeError
-    config = {
-        'credentials': st.secrets["credentials"].to_dict(),
-        'cookie': st.secrets["cookie"].to_dict()
-    }
+# --- SISTEMA DE LOGIN SENCILLO ---
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+    st.session_state.user_role = None
+    st.session_state.user_name = None
 
-    authenticator = stauth.Authenticate(
-        config['credentials'],
-        config['cookie']['name'],
-        config['cookie']['key'],
-        config['cookie']['expiry_days']
-    )
+def login():
+    st.title("🔒 Iniciar Sesión - Titan Football")
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        username = st.text_input("Usuario")
+        password = st.text_input("Contraseña", type="password")
+        if st.button("Login", use_container_width=True):
+            if username == st.secrets.get("ADMIN_USER") and password == st.secrets.get("ADMIN_PASS"):
+                st.session_state.logged_in = True
+                st.session_state.user_role = "admin"
+                st.session_state.user_name = "Dueño (Admin)"
+                st.rerun()
+            elif username == st.secrets.get("CLIENTE_USER") and password == st.secrets.get("CLIENTE_PASS"):
+                st.session_state.logged_in = True
+                st.session_state.user_role = "cliente"
+                st.session_state.user_name = "Cliente Afiliado"
+                st.rerun()
+            else:
+                st.error("❌ Usuario o contraseña incorrectos")
 
-    name, authentication_status, username = authenticator.login(location='main')
-
-    if authentication_status == False:
-        st.error("❌ Usuario o contraseña incorrectos")
-        st.stop()
-    elif authentication_status == None:
-        st.warning("👋 Por favor, ingresa tu usuario y contraseña para acceder al sistema.")
-        st.stop()
-
-    # Obtenemos el rol del usuario logueado
-    user_role = config['credentials']['usernames'][username].get('role', 'cliente')
-
-except Exception as e:
-    st.error(f"🚨 Error en la configuración de seguridad: {e}")
-    st.stop()
+if not st.session_state.logged_in:
+    login()
+    st.stop() # Detiene la app aquí si no hay login
 
 # --- DISEÑO VISUAL DEFINITIVO ---
 st.markdown("""
@@ -176,21 +173,17 @@ def analizar_con_ia(equipo_local, equipo_visitante, liga, contexto, modo_kalshi)
 
 # --- BARRA LATERAL ---
 with st.sidebar:
-    st.write(f"👤 **{name}** ({user_role.upper()})")
-    authenticator.logout('Cerrar Sesión', 'sidebar')
+    st.write(f"👤 **{st.session_state.user_name}** ({st.session_state.user_role.upper()})")
+    if st.button("Cerrar Sesión"):
+        st.session_state.logged_in = False
+        st.session_state.user_role = None
+        st.session_state.user_name = None
+        st.rerun()
     st.divider()
     
-    if user_role == "admin":
+    if st.session_state.user_role == "admin":
         st.header("👑 Modo Dios (Admin)")
         st.write(f"**Tokens consumidos hoy:** {st.session_state.tokens_totales}")
-        
-        st.write("### 📊 Métricas de la App")
-        datos_admin = {
-            "Cliente": ["afiliado", "cliente_nuevo_2"],
-            "Última conexión": ["Hoy 14:30", "Hoy 10:15"],
-            "Consultas hechas": [12, 5]
-        }
-        st.table(pd.DataFrame(datos_admin))
         st.divider()
 
     st.header("⚙️ Panel Pro")
