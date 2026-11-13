@@ -23,25 +23,39 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 
-    /* 3. LA MAGIA: FLECHITA FLOTANTE A LA IZQUIERDA */
+    /* 3. ARREGLO DE LAS FLECHAS (Para que solo haya una, chiquita y verde) */
+    
+    /* Flecha cuando la barra está CERRADA */
     [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] {
         display: block !important;
         visibility: visible !important;
         position: fixed !important;
-        left: 0px !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        background-color: #1e2530 !important;
-        border: 2px solid #00ff87 !important;
-        border-radius: 0 8px 8px 0 !important;
-        padding: 10px !important;
+        left: 15px !important; 
+        top: 15px !important; 
+        background-color: transparent !important; 
+        border: none !important; 
+        padding: 0px !important;
         z-index: 9999999 !important;
     }
-    [data-testid="collapsedControl"] svg, [data-testid="stSidebarCollapsedControl"] svg {
+
+    /* Flecha cuando la barra está ABIERTA (Quitamos el fondo gris y la hacemos chiquita) */
+    [data-testid="stSidebarCollapseButton"] {
+        background-color: transparent !important;
+        border: none !important;
+    }
+    [data-testid="stSidebarCollapseButton"] > div {
+        background-color: transparent !important;
+        border: none !important;
+    }
+    
+    /* Tamaño y color de AMBAS flechas */
+    [data-testid="collapsedControl"] svg, 
+    [data-testid="stSidebarCollapsedControl"] svg,
+    [data-testid="stSidebarCollapseButton"] svg {
         fill: #00ff87 !important;
         color: #00ff87 !important;
-        width: 30px !important;
-        height: 30px !important;
+        width: 24px !important; 
+        height: 24px !important;
     }
     
     /* 4. ESTILOS GENERALES OSCUROS */
@@ -75,7 +89,6 @@ st.markdown("""
 # --- SEGURIDAD ---
 try:
     api_key = st.secrets["DEEPSEEK_TOKEN"]
-    # Inicializamos el cliente oficial de OpenAI apuntando a DeepSeek
     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
 except Exception as e:
     st.error("🚨 Error crítico: No se encontró DEEPSEEK_TOKEN en los Secrets de Streamlit.")
@@ -171,7 +184,6 @@ def analizar_con_ia(equipo_local, equipo_visitante, liga, contexto, modo_kalshi)
     prompt = f"Partido: {equipo_local} vs {equipo_visitante}. Liga: {liga}. Contexto: {contexto}. Noticias {equipo_local}: {noticias_local}. Noticias {equipo_visitante}: {noticias_visitante}."
     
     try:
-        # Usamos el cliente oficial de OpenAI (mucho más seguro y rápido)
         respuesta = client.chat.completions.create(
             model="deepseek-chat",
             messages=[
