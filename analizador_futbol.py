@@ -7,7 +7,7 @@ import datetime
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Titan Football AI PRO", page_icon="⚽", layout="wide", initial_sidebar_state="collapsed")
 
-# --- SISTEMA DE LOGIN SENCILLO ---
+# --- SISTEMA DE LOGIN ---
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.user_role = None
@@ -37,29 +37,68 @@ if not st.session_state.logged_in:
 # --- DISEÑO VISUAL DEFINITIVO ---
 st.markdown("""
     <style>
-    [data-testid="stHeader"] { background-color: #0e1117 !important; background: #0e1117 !important; }
+    /* 1. QUITAMOS LA FRANJA BLANCA (Pintamos el header de oscuro) */
+    [data-testid="stHeader"] {
+        background-color: #0e1117 !important;
+        background: #0e1117 !important;
+    }
+    
+    /* 2. OCULTAMOS EL GATITO Y EL BOTÓN DE DEPLOY */
     [data-testid="stToolbar"] {display: none !important;}
     .stDeployButton {display: none !important;}
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] { display: block !important; visibility: visible !important; position: fixed !important; left: 15px !important; top: 15px !important; background-color: transparent !important; border: none !important; padding: 0px !important; z-index: 9999999 !important; }
-    [data-testid="stSidebarCollapseButton"] { background-color: transparent !important; border: none !important; }
-    [data-testid="stSidebarCollapseButton"] > div { background-color: transparent !important; border: none !important; }
-    [data-testid="collapsedControl"] svg, [data-testid="stSidebarCollapsedControl"] svg, [data-testid="stSidebarCollapseButton"] svg { fill: #00ff87 !important; color: #00ff87 !important; width: 24px !important; height: 24px !important; }
+
+    /* 3. ARREGLO DE LAS FLECHAS (Chiquita, verde y sin fondo) */
+    [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] {
+        display: block !important;
+        visibility: visible !important;
+        position: fixed !important;
+        left: 15px !important; 
+        top: 15px !important; 
+        background-color: transparent !important; 
+        border: none !important; 
+        padding: 0px !important;
+        z-index: 9999999 !important;
+    }
+    [data-testid="stSidebarCollapseButton"] {
+        background-color: transparent !important;
+        border: none !important;
+    }
+    [data-testid="stSidebarCollapseButton"] > div {
+        background-color: transparent !important;
+        border: none !important;
+    }
+    [data-testid="collapsedControl"] svg, 
+    [data-testid="stSidebarCollapsedControl"] svg,
+    [data-testid="stSidebarCollapseButton"] svg {
+        fill: #00ff87 !important;
+        color: #00ff87 !important;
+        width: 24px !important; 
+        height: 24px !important;
+    }
+    
+    /* 4. ESTILOS GENERALES OSCUROS */
     html, body, [data-testid="stAppViewContainer"], .stApp { background-color: #0e1117 !important; color: #ffffff !important; }
     h1, h2, h3, p, span, label { color: #ffffff !important; font-family: 'Helvetica Neue', sans-serif; }
+    
     .big-title { font-size: 3.5rem; font-weight: 900; color: #00ff87 !important; text-align: center; margin-bottom: 0; }
     .sub-title { font-size: 1.2rem; color: #a0aab5 !important; text-align: center; margin-bottom: 30px; }
+    
     .stTextInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"], .stNumberInput input { background-color: #1e2530 !important; color: #ffffff !important; border: 1px solid #00ff87 !important; border-radius: 8px !important; }
+    
     ul[data-testid="stSelectboxVirtualDropdown"] { background-color: #1e2530 !important; }
     li[role="option"] { color: #ffffff !important; }
     li[role="option"]:hover { background-color: #00ff87 !important; color: #0e1117 !important; }
+
     .stButton > button { background-color: #00ff87 !important; color: #0e1117 !important; font-weight: bold !important; font-size: 1.2rem !important; border-radius: 8px !important; width: 100% !important; border: none !important; }
     .stButton > button:hover { background-color: #00cc6a !important; color: #0e1117 !important; border: none !important; }
+    
     [data-testid="stSidebar"] { background-color: #161b22 !important; }
     .stTabs [data-baseweb="tab-list"] { gap: 24px; }
     .stTabs [data-baseweb="tab"] { font-size: 1.2rem; font-weight: bold; color: #ffffff; }
     .stTabs [aria-selected="true"] { color: #00ff87 !important; border-bottom-color: #00ff87 !important; }
+
     .contexto-box { background-color: #1e2530; border: 1px solid #00ff87; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; font-size: 0.9rem; color: #a0aab5 !important; }
     .sidebar-info { background-color: #1e2530; border-radius: 8px; padding: 10px; color: #a0aab5 !important; font-size: 0.9rem; }
     .stAlert > div { background-color: #1e2530 !important; color: #00ff87 !important; border: 1px solid #00ff87 !important; }
@@ -143,11 +182,10 @@ def analizar_con_ia(equipo_local, equipo_visitante, liga, contexto, modo_kalshi)
     noticias_local = buscar_noticias_reales(equipo_local, liga)
     noticias_visitante = buscar_noticias_reales(equipo_visitante, liga)
     
-    # FORZAMOS A LA IA A USAR EL FORMATO EXACTO
     if modo_kalshi:
         system_prompt = """
         Eres un analista experto en mercados de predicción (Kalshi). 
-        IGNORA la calidad de las noticias, DEBES responder OBLIGATORIAMENTE con este formato exacto:
+        Responde con este formato exacto:
         📊 **Probabilidad Estimada:** [Ej: Local 45% | Empate 30% | Visitante 25%]
         🎯 **Recomendación de Contrato:** [Ej: Comprar SÍ al Local, o Comprar NO, o No operar]
         🔍 **Análisis Táctico:** [Explica en 3 líneas por qué crees que pasará esto]
@@ -156,7 +194,7 @@ def analizar_con_ia(equipo_local, equipo_visitante, liga, contexto, modo_kalshi)
     else:
         system_prompt = """
         Eres un analista experto en fútbol y apuestas deportivas para el mercado latinoamericano.
-        IGNORA la calidad de las noticias, DEBES responder OBLIGATORIAMENTE con este formato exacto:
+        Responde con este formato exacto:
         📊 **Probabilidad del Partido:** [Ej: Local 45% | Empate 30% | Visitante 25%]
         🎯 **Apuesta Recomendada:** [Ej: Gana Local, Doble Oportunidad, Más de 2.5 goles, o No apostar]
         🔍 **Análisis Táctico:** [Explica en 3 líneas por qué crees que pasará esto]
@@ -166,9 +204,7 @@ def analizar_con_ia(equipo_local, equipo_visitante, liga, contexto, modo_kalshi)
     prompt = f"Partido: {equipo_local} vs {equipo_visitante}. Liga: {liga}. Contexto: {contexto}. Noticias {equipo_local}: {noticias_local}. Noticias {equipo_visitante}: {noticias_visitante}."
     url = "https://api.deepseek.com/chat/completions"
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {ia_token}"}
-    
-    # Bajamos la temperatura a 0.3 para que sea más obediente al formato
-    payload = {"model": "deepseek-chat", "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}], "temperature": 0.3}
+    payload = {"model": "deepseek-chat", "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}], "temperature": 0.7}
     
     try:
         req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers)
@@ -282,15 +318,12 @@ with tab1:
                     📰 <b>Contexto leído de las noticias:</b> {res['noticias'][:150]}...
                 </div>
             ''', unsafe_allow_html=True)
-            
-            # AQUÍ ESTÁ EL TRUCO: Metemos el texto en un desplegable para que no oculte la calculadora
-            with st.expander("📄 Ver Análisis Completo de la IA", expanded=True):
-                st.markdown(res['respuesta'])
+            st.markdown(res['respuesta'])
         
         st.markdown("---")
         
-        # LA CALCULADORA AHORA SIEMPRE SERÁ VISIBLE
-        st.subheader("🧮 Calculadora de Value Bet (Bet593 / Betcris)")
+        # --- AQUÍ ESTÁ EL ÚNICO CAMBIO (Quitamos Bet593 y Betcris) ---
+        st.subheader("🧮 Calculadora de Value Bet")
         st.write("Ingresa los datos de tu casa de apuestas para saber si hay valor.")
         
         col_calc1, col_calc2 = st.columns(2)
