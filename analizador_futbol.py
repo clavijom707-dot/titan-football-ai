@@ -11,34 +11,35 @@ import pandas as pd
 st.set_page_config(page_title="Titan Football AI PRO", page_icon="⚽", layout="wide", initial_sidebar_state="collapsed")
 
 # --- SISTEMA DE LOGIN ---
-# Lee las credenciales de forma segura desde los Secrets de Streamlit
-if "credentials" in st.secrets:
+try:
+    # Convertimos los secrets a diccionarios normales para evitar el TypeError
     config = {
-        'credentials': st.secrets['credentials'],
-        'cookie': st.secrets['cookie']
+        'credentials': st.secrets["credentials"].to_dict(),
+        'cookie': st.secrets["cookie"].to_dict()
     }
-else:
-    st.error("⚠️ Error: Faltan las credenciales en los Secrets de Streamlit.")
+
+    authenticator = stauth.Authenticate(
+        config['credentials'],
+        config['cookie']['name'],
+        config['cookie']['key'],
+        config['cookie']['expiry_days']
+    )
+
+    name, authentication_status, username = authenticator.login(location='main')
+
+    if authentication_status == False:
+        st.error("❌ Usuario o contraseña incorrectos")
+        st.stop()
+    elif authentication_status == None:
+        st.warning("👋 Por favor, ingresa tu usuario y contraseña para acceder al sistema.")
+        st.stop()
+
+    # Obtenemos el rol del usuario logueado
+    user_role = config['credentials']['usernames'][username].get('role', 'cliente')
+
+except Exception as e:
+    st.error(f"🚨 Error en la configuración de seguridad: {e}")
     st.stop()
-
-authenticator = stauth.Authenticate(
-    config['credentials'],
-    config['cookie']['name'],
-    config['cookie']['key'],
-    config['cookie']['expiry_days']
-)
-
-name, authentication_status, username = authenticator.login(location='main')
-
-if authentication_status == False:
-    st.error("❌ Usuario o contraseña incorrectos")
-    st.stop()
-elif authentication_status == None:
-    st.warning("👋 Por favor, ingresa tu usuario y contraseña para acceder al sistema.")
-    st.stop()
-
-# Obtenemos el rol del usuario (admin o cliente)
-user_role = config['credentials']['usernames'][username].get('role', 'cliente')
 
 # --- DISEÑO VISUAL DEFINITIVO ---
 st.markdown("""
@@ -179,7 +180,6 @@ with st.sidebar:
     authenticator.logout('Cerrar Sesión', 'sidebar')
     st.divider()
     
-    # PANEL SECRETO DEL DUEÑO (Solo visible si eres admin)
     if user_role == "admin":
         st.header("👑 Modo Dios (Admin)")
         st.write(f"**Tokens consumidos hoy:** {st.session_state.tokens_totales}")
@@ -193,7 +193,6 @@ with st.sidebar:
         st.table(pd.DataFrame(datos_admin))
         st.divider()
 
-    # PANEL NORMAL
     st.header("⚙️ Panel Pro")
     st.write(f"**Tus consultas de hoy:** {st.session_state.consultas} / 5")
     if st.button("🗑️ Limpiar Historial"):
