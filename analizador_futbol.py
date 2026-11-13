@@ -3,7 +3,6 @@ import json
 import urllib.request
 import urllib.parse
 import datetime
-from openai import OpenAI
 
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Titan Football AI PRO", page_icon="⚽", layout="wide", initial_sidebar_state="collapsed")
@@ -14,7 +13,7 @@ if "logged_in" not in st.session_state:
     st.session_state.user_role = None
     st.session_state.user_name = None
 
-def login():
+if not st.session_state.logged_in:
     st.title("🔒 Iniciar Sesión - Titan Football")
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -33,37 +32,73 @@ def login():
                 st.rerun()
             else:
                 st.error("❌ Usuario o contraseña incorrectos")
-
-if not st.session_state.logged_in:
-    login()
-    st.stop() # Detiene la app aquí si no hay login
+    st.stop()
 
 # --- DISEÑO VISUAL DEFINITIVO ---
 st.markdown("""
     <style>
-    [data-testid="stHeader"] { background-color: #0e1117 !important; background: #0e1117 !important; }
+    /* 1. QUITAMOS LA FRANJA BLANCA (Pintamos el header de oscuro) */
+    [data-testid="stHeader"] {
+        background-color: #0e1117 !important;
+        background: #0e1117 !important;
+    }
+    
+    /* 2. OCULTAMOS EL GATITO Y EL BOTÓN DE DEPLOY */
     [data-testid="stToolbar"] {display: none !important;}
     .stDeployButton {display: none !important;}
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] { display: block !important; visibility: visible !important; position: fixed !important; left: 15px !important; top: 15px !important; background-color: transparent !important; border: none !important; padding: 0px !important; z-index: 9999999 !important; }
-    [data-testid="stSidebarCollapseButton"] { background-color: transparent !important; border: none !important; }
-    [data-testid="stSidebarCollapseButton"] > div { background-color: transparent !important; border: none !important; }
-    [data-testid="collapsedControl"] svg, [data-testid="stSidebarCollapsedControl"] svg, [data-testid="stSidebarCollapseButton"] svg { fill: #00ff87 !important; color: #00ff87 !important; width: 24px !important; height: 24px !important; }
+
+    /* 3. ARREGLO DE LAS FLECHAS (Chiquita, verde y sin fondo) */
+    [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] {
+        display: block !important;
+        visibility: visible !important;
+        position: fixed !important;
+        left: 15px !important; 
+        top: 15px !important; 
+        background-color: transparent !important; 
+        border: none !important; 
+        padding: 0px !important;
+        z-index: 9999999 !important;
+    }
+    [data-testid="stSidebarCollapseButton"] {
+        background-color: transparent !important;
+        border: none !important;
+    }
+    [data-testid="stSidebarCollapseButton"] > div {
+        background-color: transparent !important;
+        border: none !important;
+    }
+    [data-testid="collapsedControl"] svg, 
+    [data-testid="stSidebarCollapsedControl"] svg,
+    [data-testid="stSidebarCollapseButton"] svg {
+        fill: #00ff87 !important;
+        color: #00ff87 !important;
+        width: 24px !important; 
+        height: 24px !important;
+    }
+    
+    /* 4. ESTILOS GENERALES OSCUROS */
     html, body, [data-testid="stAppViewContainer"], .stApp { background-color: #0e1117 !important; color: #ffffff !important; }
     h1, h2, h3, p, span, label { color: #ffffff !important; font-family: 'Helvetica Neue', sans-serif; }
+    
     .big-title { font-size: 3.5rem; font-weight: 900; color: #00ff87 !important; text-align: center; margin-bottom: 0; }
     .sub-title { font-size: 1.2rem; color: #a0aab5 !important; text-align: center; margin-bottom: 30px; }
+    
     .stTextInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"], .stNumberInput input { background-color: #1e2530 !important; color: #ffffff !important; border: 1px solid #00ff87 !important; border-radius: 8px !important; }
+    
     ul[data-testid="stSelectboxVirtualDropdown"] { background-color: #1e2530 !important; }
     li[role="option"] { color: #ffffff !important; }
     li[role="option"]:hover { background-color: #00ff87 !important; color: #0e1117 !important; }
+
     .stButton > button { background-color: #00ff87 !important; color: #0e1117 !important; font-weight: bold !important; font-size: 1.2rem !important; border-radius: 8px !important; width: 100% !important; border: none !important; }
     .stButton > button:hover { background-color: #00cc6a !important; color: #0e1117 !important; border: none !important; }
+    
     [data-testid="stSidebar"] { background-color: #161b22 !important; }
     .stTabs [data-baseweb="tab-list"] { gap: 24px; }
     .stTabs [data-baseweb="tab"] { font-size: 1.2rem; font-weight: bold; color: #ffffff; }
     .stTabs [aria-selected="true"] { color: #00ff87 !important; border-bottom-color: #00ff87 !important; }
+
     .contexto-box { background-color: #1e2530; border: 1px solid #00ff87; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; font-size: 0.9rem; color: #a0aab5 !important; }
     .sidebar-info { background-color: #1e2530; border-radius: 8px; padding: 10px; color: #a0aab5 !important; font-size: 0.9rem; }
     .stAlert > div { background-color: #1e2530 !important; color: #00ff87 !important; border: 1px solid #00ff87 !important; }
@@ -71,12 +106,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- SEGURIDAD IA ---
-try:
-    api_key = st.secrets["DEEPSEEK_TOKEN"]
-    client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
-except Exception as e:
-    st.error("🚨 Error crítico: No se encontró DEEPSEEK_TOKEN en los Secrets de Streamlit.")
+# --- SEGURIDAD ---
+if "DEEPSEEK_TOKEN" in st.secrets:
+    ia_token = st.secrets["DEEPSEEK_TOKEN"]
+else:
+    st.error("🚨 Falta configurar DEEPSEEK_TOKEN en los Secrets")
     st.stop()
 
 # --- MEMORIA ---
@@ -94,7 +128,7 @@ LIGAS_ESPN = {
     "Liga MX (México)": "mex.1", "MLS (EE.UU.)": "usa.1"
 }
 
-# --- FUNCIONES --- 
+# --- FUNCIONES ---
 def buscar_noticias_reales(equipo, liga):
     query = urllib.parse.quote(f"{equipo} futbol {liga}")
     url = f"https://news.google.com/rss/search?q={query}&hl=es-419&gl=US&ceid=US:es-419"
@@ -148,7 +182,6 @@ def analizar_con_ia(equipo_local, equipo_visitante, liga, contexto, modo_kalshi)
     noticias_local = buscar_noticias_reales(equipo_local, liga)
     noticias_visitante = buscar_noticias_reales(equipo_visitante, liga)
     
-    # RESTAURADO: Prompts completos
     if modo_kalshi:
         system_prompt = """
         Eres un analista experto en mercados de predicción (Kalshi). 
@@ -169,20 +202,21 @@ def analizar_con_ia(equipo_local, equipo_visitante, liga, contexto, modo_kalshi)
         """
     
     prompt = f"Partido: {equipo_local} vs {equipo_visitante}. Liga: {liga}. Contexto: {contexto}. Noticias {equipo_local}: {noticias_local}. Noticias {equipo_visitante}: {noticias_visitante}."
+    url = "https://api.deepseek.com/chat/completions"
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {ia_token}"}
+    payload = {"model": "deepseek-chat", "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}], "temperature": 0.7}
     
     try:
-        respuesta = client.chat.completions.create(
-            model="deepseek-chat",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7
-        )
-        tokens_usados = respuesta.usage.total_tokens
-        st.session_state.tokens_totales += tokens_usados 
-        
-        return {"noticias": noticias_local, "respuesta": respuesta.choices[0].message.content}
+        req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers)
+        with urllib.request.urlopen(req, timeout=30) as res:
+            respuesta_json = json.loads(res.read().decode())
+            respuesta_texto = respuesta_json['choices'][0]['message']['content']
+            
+            # Contador de tokens
+            if 'usage' in respuesta_json:
+                st.session_state.tokens_totales += respuesta_json['usage']['total_tokens']
+                
+            return {"noticias": noticias_local, "respuesta": respuesta_texto}
     except Exception as e:
         return {"noticias": "Error", "respuesta": f"La IA no pudo responder. Detalle: {e}"}
 
@@ -195,14 +229,14 @@ with st.sidebar:
         st.session_state.user_name = None
         st.rerun()
     st.divider()
-    
+
     if st.session_state.user_role == "admin":
         st.header("👑 Modo Dios (Admin)")
         st.write(f"**Tokens consumidos hoy:** {st.session_state.tokens_totales}")
         st.divider()
 
     st.header("⚙️ Panel Pro")
-    st.write(f"**Tus consultas de hoy:** {st.session_state.consultas} / 5")
+    st.write(f"**Consultas de hoy:** {st.session_state.consultas} / 5")
     if st.button("🗑️ Limpiar Historial"):
         st.session_state.historial = []
         st.session_state.ultimo_analisis = None
@@ -216,12 +250,14 @@ with st.sidebar:
     else:
         for item in reversed(st.session_state.historial): st.write(f"• {item['local']} vs {item['visitante']} ({item['hora']})")
 
-# --- ENCABEZADO Y PESTAÑAS ---
+# --- ENCABEZADO ---
 st.markdown('<p class="big-title">⚽ Titan Football AI PRO</p>', unsafe_allow_html=True)
 st.markdown('<p class="sub-title">El centro de mando definitivo para el aficionado.</p>', unsafe_allow_html=True)
 
+# --- PESTAÑAS ---
 tab1, tab2 = st.tabs(["🧠 Analizador IA", "📺 Marcadores en Vivo (ESPN)"])
 
+# --- PESTAÑA 1 ---
 with tab1:
     liga_seleccionada = st.selectbox("Selecciona una liga para ver los próximos partidos:", list(LIGAS_ESPN.keys()))
     
@@ -259,7 +295,7 @@ with tab1:
     modo_kalshi = st.checkbox("💡 Activar Modo Kalshi (Análisis para Mercados de Predicción)")
 
     if st.button("🧠 ANALIZAR PARTIDO"):
-        if st.session_state.consultas >= 5:
+        if st.session_state.consultas >= 5 and st.session_state.user_role != "admin":
             st.error("🚨 Límite de 5 análisis gratuitos alcanzado.")
         elif equipo_local and equipo_visitante:
             with st.spinner("Buscando noticias reales y analizando tácticas..."):
@@ -285,7 +321,6 @@ with tab1:
             ''', unsafe_allow_html=True)
             st.markdown(res['respuesta'])
         
-        # RESTAURADO: Calculadora de Value Bet
         st.markdown("---")
         st.subheader("🧮 Calculadora de Value Bet (Bet593 / Betcris)")
         st.write("Ingresa los datos de tu casa de apuestas para saber si hay valor.")
@@ -306,8 +341,10 @@ with tab1:
             else:
                 st.error(f"❌ NO HAY VALOR. La casa paga menos ({prob_implicita:.1f}%) de lo que realmente debería ser ({prob_ia}%). No apuestes.")
 
+# --- PESTAÑA 2 ---
 with tab2:
     st.subheader("🏆 UEFA Champions League (En Vivo / Próximos)")
+    st.write("Los marcadores se actualizan automáticamente desde los servidores de ESPN.")
     partidos_champions = obtener_partidos_liga("uefa.champions")
     if partidos_champions is None:
         st.error("⚠️ Los servidores de ESPN están caídos en este momento.")
