@@ -11,6 +11,7 @@ import pandas as pd
 st.set_page_config(page_title="Titan Football AI PRO", page_icon="⚽", layout="wide", initial_sidebar_state="collapsed")
 
 # --- SISTEMA DE LOGIN ---
+# Lee las credenciales de forma segura desde los Secrets de Streamlit
 if "credentials" in st.secrets:
     config = {
         'credentials': st.secrets['credentials'],
@@ -36,13 +37,12 @@ elif authentication_status == None:
     st.warning("👋 Por favor, ingresa tu usuario y contraseña para acceder al sistema.")
     st.stop()
 
-# Obtenemos el rol del usuario logueado
+# Obtenemos el rol del usuario (admin o cliente)
 user_role = config['credentials']['usernames'][username].get('role', 'cliente')
 
 # --- DISEÑO VISUAL DEFINITIVO ---
 st.markdown("""
     <style>
-    /* ... (Todo tu CSS oscuro se mantiene igual, no lo toqué) ... */
     [data-testid="stHeader"] { background-color: #0e1117 !important; background: #0e1117 !important; }
     [data-testid="stToolbar"] {display: none !important;}
     .stDeployButton {display: none !important;}
@@ -87,7 +87,7 @@ if "consultas" not in st.session_state: st.session_state.consultas = 0
 if "ultimo_analisis" not in st.session_state: st.session_state.ultimo_analisis = None
 if "partidos_liga" not in st.session_state: st.session_state.partidos_liga = []
 if "liga_actual" not in st.session_state: st.session_state.liga_actual = "LigaPro (Ecuador)"
-if "tokens_totales" not in st.session_state: st.session_state.tokens_totales = 0 # Contador de tokens
+if "tokens_totales" not in st.session_state: st.session_state.tokens_totales = 0 
 
 LIGAS_ESPN = {
     "LigaPro (Ecuador)": "ecu.1", "Champions League": "uefa.champions",
@@ -96,9 +96,8 @@ LIGAS_ESPN = {
     "Liga MX (México)": "mex.1", "MLS (EE.UU.)": "usa.1"
 }
 
-# --- FUNCIONES --- (Se mantienen igual)
+# --- FUNCIONES --- 
 def buscar_noticias_reales(equipo, liga):
-    # ... (código igual) ...
     query = urllib.parse.quote(f"{equipo} futbol {liga}")
     url = f"https://news.google.com/rss/search?q={query}&hl=es-419&gl=US&ceid=US:es-419"
     try:
@@ -118,7 +117,6 @@ def buscar_noticias_reales(equipo, liga):
     except Exception: return "Servicio de noticias no disponible."
 
 def obtener_partidos_liga(slug_liga):
-    # ... (código igual) ...
     url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{slug_liga}/scoreboard?limit=100"
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -168,9 +166,8 @@ def analizar_con_ia(equipo_local, equipo_visitante, liga, contexto, modo_kalshi)
             ],
             temperature=0.7
         )
-        # NUEVO: Extraemos los tokens usados que nos informa DeepSeek
         tokens_usados = respuesta.usage.total_tokens
-        st.session_state.tokens_totales += tokens_usados # Los sumamos al contador global
+        st.session_state.tokens_totales += tokens_usados 
         
         return {"noticias": noticias_local, "respuesta": respuesta.choices[0].message.content}
     except Exception as e:
@@ -182,14 +179,11 @@ with st.sidebar:
     authenticator.logout('Cerrar Sesión', 'sidebar')
     st.divider()
     
-    # ==========================================
-    # PANEL SECRETO DEL DUEÑO (Solo si eres admin)
-    # ==========================================
+    # PANEL SECRETO DEL DUEÑO (Solo visible si eres admin)
     if user_role == "admin":
         st.header("👑 Modo Dios (Admin)")
         st.write(f"**Tokens consumidos hoy:** {st.session_state.tokens_totales}")
         
-        # Simulador de usuarios conectados (para ver cómo se vería)
         st.write("### 📊 Métricas de la App")
         datos_admin = {
             "Cliente": ["afiliado", "cliente_nuevo_2"],
@@ -197,10 +191,9 @@ with st.sidebar:
             "Consultas hechas": [12, 5]
         }
         st.table(pd.DataFrame(datos_admin))
-        st.info("💡 *Nota: Para guardar un historial real entre días, conectaremos una base de datos (Google Sheets o Supabase) más adelante.*")
         st.divider()
 
-    # PANEL NORMAL (Lo ven los clientes y tú)
+    # PANEL NORMAL
     st.header("⚙️ Panel Pro")
     st.write(f"**Tus consultas de hoy:** {st.session_state.consultas} / 5")
     if st.button("🗑️ Limpiar Historial"):
@@ -216,7 +209,7 @@ with st.sidebar:
     else:
         for item in reversed(st.session_state.historial): st.write(f"• {item['local']} vs {item['visitante']} ({item['hora']})")
 
-# --- EL RESTO DEL CÓDIGO VISUAL (Pestañas y Botones se mantienen igual) ---
+# --- ENCABEZADO Y PESTAÑAS ---
 st.markdown('<p class="big-title">⚽ Titan Football AI PRO</p>', unsafe_allow_html=True)
 st.markdown('<p class="sub-title">El centro de mando definitivo para el aficionado.</p>', unsafe_allow_html=True)
 
