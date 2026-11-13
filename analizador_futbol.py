@@ -148,10 +148,25 @@ def analizar_con_ia(equipo_local, equipo_visitante, liga, contexto, modo_kalshi)
     noticias_local = buscar_noticias_reales(equipo_local, liga)
     noticias_visitante = buscar_noticias_reales(equipo_visitante, liga)
     
+    # RESTAURADO: Prompts completos
     if modo_kalshi:
-        system_prompt = "Eres un analista experto en mercados de predicción (Kalshi)..."
+        system_prompt = """
+        Eres un analista experto en mercados de predicción (Kalshi). 
+        Responde con este formato exacto:
+        📊 **Probabilidad Estimada:** [Ej: Local 45% | Empate 30% | Visitante 25%]
+        🎯 **Recomendación de Contrato:** [Ej: Comprar SÍ al Local, o Comprar NO, o No operar]
+        🔍 **Análisis Táctico:** [Explica en 3 líneas por qué crees que pasará esto]
+        💡 **Value Bet (Kalshi):** [Dime si el precio en centavos está infravalorando alguna probabilidad].
+        """
     else:
-        system_prompt = "Eres un analista experto en fútbol y apuestas deportivas..."
+        system_prompt = """
+        Eres un analista experto en fútbol y apuestas deportivas para el mercado latinoamericano (como Bet593, Betcris).
+        Responde con este formato exacto:
+        📊 **Probabilidad del Partido:** [Ej: Local 45% | Empate 30% | Visitante 25%]
+        🎯 **Apuesta Recomendada:** [Ej: Gana Local, Doble Oportunidad, Más de 2.5 goles, o No apostar]
+        🔍 **Análisis Táctico:** [Explica en 3 líneas por qué crees que pasará esto]
+        💡 **Value Bet (Cuota con valor):** [Dime si la cuota de la casa de apuestas infravalora a algún equipo].
+        """
     
     prompt = f"Partido: {equipo_local} vs {equipo_visitante}. Liga: {liga}. Contexto: {contexto}. Noticias {equipo_local}: {noticias_local}. Noticias {equipo_visitante}: {noticias_visitante}."
     
@@ -269,6 +284,27 @@ with tab1:
                 </div>
             ''', unsafe_allow_html=True)
             st.markdown(res['respuesta'])
+        
+        # RESTAURADO: Calculadora de Value Bet
+        st.markdown("---")
+        st.subheader("🧮 Calculadora de Value Bet (Bet593 / Betcris)")
+        st.write("Ingresa los datos de tu casa de apuestas para saber si hay valor.")
+        
+        col_calc1, col_calc2 = st.columns(2)
+        with col_calc1:
+            cuota_casa = st.number_input("Cuota de la casa (Ej: 2.10)", min_value=1.01, value=2.00, step=0.01)
+        with col_calc2:
+            prob_ia = st.number_input("Probabilidad según IA (%) (Ej: 55)", min_value=1, max_value=100, value=50, step=1)
+        
+        if st.button("💰 Calcular si hay Valor"):
+            prob_implicita = 100 / cuota_casa
+            st.write(f"**Probabilidad implícita de la casa:** {prob_implicita:.1f}%")
+            st.write(f"**Probabilidad estimada por la IA:** {prob_ia}%")
+            
+            if prob_ia > prob_implicita:
+                st.success(f"✅ ¡HAY VALOR! La IA dice que la probabilidad real es mayor ({prob_ia}%) a la que paga la casa ({prob_implicita:.1f}%). ¡Apostar!")
+            else:
+                st.error(f"❌ NO HAY VALOR. La casa paga menos ({prob_implicita:.1f}%) de lo que realmente debería ser ({prob_ia}%). No apuestes.")
 
 with tab2:
     st.subheader("🏆 UEFA Champions League (En Vivo / Próximos)")
