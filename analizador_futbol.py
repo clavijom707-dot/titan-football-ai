@@ -34,17 +34,20 @@ if not st.session_state.logged_in:
                 st.error("❌ Usuario o contraseña incorrectos")
     st.stop()
 
-# --- DISEÑO VISUAL DEFINITIVO ---
+# --- DISEÑO VISUAL DEFINITIVO (ACTUALIZADO) ---
 st.markdown("""
     <style>
-    /* 1. OCULTAMOS TODO EL MENÚ SUPERIOR (A PRUEBA DE BALAS) */
-    header, #MainMenu, footer, [data-testid="stToolbar"], [data-testid="stDecoration"] {
-        display: none !important;
-        visibility: hidden !important;
-    }
-    [data-testid="stAppViewContainer"] > .main {
-        padding-top: 0px !important; /* Quitamos el espacio en blanco de arriba */
-    }
+    /* 1. OCULTAMOS TODO EL MENÚ SUPERIOR (NUEVA VERSIÓN STREAMLIT) */
+    header[data-testid="stHeader"] {display: none !important;}
+    [data-testid="stToolbar"] {display: none !important; visibility: hidden !important;}
+    [data-testid="stDecoration"] {display: none !important;}
+    [data-testid="stStatusWidget"] {display: none !important;}
+    #MainMenu {visibility: hidden !important; display: none !important;}
+    footer {visibility: hidden !important; display: none !important;}
+    
+    /* Ocultar el botón de Fork y GitHub específicamente */
+    .stAppDeployButton {display: none !important;}
+    [data-testid="stAppViewContainer"] > header {display: none !important;}
 
     /* 2. ARREGLO DE LAS FLECHAS (Chiquita, verde y sin fondo) */
     [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] {
@@ -341,13 +344,10 @@ with tab1:
             if prob_ia > prob_implicita:
                 st.success(f"✅ ¡HAY VALOR! La IA dice que la probabilidad real es mayor ({prob_ia}%) a la que paga la casa ({prob_implicita:.1f}%).")
                 
-                # Cálculo del Criterio de Kelly
                 b = cuota_casa - 1
                 p = prob_ia / 100
                 q = 1 - p
                 kelly_fraction = (b * p - q) / b
-                
-                # Sugerimos usar 1/4 de Kelly (Cuarto de Kelly) para ser conservadores y no quebrar
                 kelly_conservador = kelly_fraction / 4
                 
                 if kelly_conservador > 0:
