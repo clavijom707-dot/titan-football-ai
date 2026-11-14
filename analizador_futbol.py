@@ -117,7 +117,6 @@ if "partidos_liga" not in st.session_state: st.session_state.partidos_liga = []
 if "liga_actual" not in st.session_state: st.session_state.liga_actual = "Selecciones / Amistosos"
 if "tokens_totales" not in st.session_state: st.session_state.tokens_totales = 0 
 
-# --- AGREGAMOS LAS OPCIONES DE SELECCIONES ---
 LIGAS_ESPN = {
     "Selecciones / Amistosos": "fifa.friendly",
     "Eliminatorias CONMEBOL": "fifa.worldq.conmebol",
