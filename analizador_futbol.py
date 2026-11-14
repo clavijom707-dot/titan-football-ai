@@ -320,23 +320,42 @@ with tab1:
         
         st.markdown("---")
         
-        # --- CALCULADORA ---
-        st.subheader("🧮 Calculadora de Value Bet")
-        st.write("Ingresa los datos de tu casa de apuestas para saber si hay valor.")
+        # --- CALCULADORA CON CRITERIO DE KELLY ---
+        st.subheader("🧮 Calculadora de Value Bet + Criterio de Kelly")
+        st.write("Ingresa los datos de tu casa de apuestas para saber si hay valor y cuánto apostar.")
         
-        col_calc1, col_calc2 = st.columns(2)
+        col_calc1, col_calc2, col_calc3 = st.columns(3)
         with col_calc1:
-            cuota_casa = st.number_input("Cuota de la casa (Ej: 2.10)", min_value=1.01, value=2.00, step=0.01)
+            cuota_casa = st.number_input("Cuota de la casa", min_value=1.01, value=2.00, step=0.01)
         with col_calc2:
-            prob_ia = st.number_input("Probabilidad según IA (%) (Ej: 55)", min_value=1, max_value=100, value=50, step=1)
+            prob_ia = st.number_input("Probabilidad IA (%)", min_value=1, max_value=100, value=50, step=1)
+        with col_calc3:
+            banca_total = st.number_input("Tu Banca Total ($)", min_value=10.0, value=100.0, step=10.0)
         
-        if st.button("💰 Calcular si hay Valor"):
+        if st.button("💰 Calcular si hay Valor y Cuánto Apostar"):
             prob_implicita = 100 / cuota_casa
             st.write(f"**Probabilidad implícita de la casa:** {prob_implicita:.1f}%")
             st.write(f"**Probabilidad estimada por la IA:** {prob_ia}%")
             
             if prob_ia > prob_implicita:
-                st.success(f"✅ ¡HAY VALOR! La IA dice que la probabilidad real es mayor ({prob_ia}%) a la que paga la casa ({prob_implicita:.1f}%). ¡Apostar!")
+                st.success(f"✅ ¡HAY VALOR! La IA dice que la probabilidad real es mayor ({prob_ia}%) a la que paga la casa ({prob_implicita:.1f}%).")
+                
+                # Cálculo del Criterio de Kelly
+                b = cuota_casa - 1
+                p = prob_ia / 100
+                q = 1 - p
+                kelly_fraction = (b * p - q) / b
+                
+                # Sugerimos usar 1/4 de Kelly (Cuarto de Kelly) para ser conservadores y no quebrar
+                kelly_conservador = kelly_fraction / 4
+                
+                if kelly_conservador > 0:
+                    monto_apuesta = banca_total * kelly_conservador
+                    st.info(f"🧮 **Criterio de Kelly (Conservador):** Apuesta el **{kelly_conservador*100:.1f}%** de tu banca.")
+                    st.markdown(f"### 💵 Apuesta sugerida: **${monto_apuesta:.2f}**")
+                    st.caption("Nota: Usamos 'Cuarto de Kelly' (1/4) para proteger tu banca de rachas negativas, como hacen los profesionales.")
+                else:
+                    st.warning("El Criterio de Kelly indica que no apuestes, el valor no es suficiente.")
             else:
                 st.error(f"❌ NO HAY VALOR. La casa paga menos ({prob_implicita:.1f}%) de lo que realmente debería ser ({prob_ia}%). No apuestes.")
 
