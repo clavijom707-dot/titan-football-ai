@@ -37,19 +37,15 @@ if not st.session_state.logged_in:
 # --- DISEÑO VISUAL DEFINITIVO ---
 st.markdown("""
     <style>
-    /* 1. QUITAMOS LA FRANJA BLANCA (Pintamos el header de oscuro) */
-    [data-testid="stHeader"] {
-        background-color: #0e1117 !important;
-        background: #0e1117 !important;
-    }
-    
-    /* 2. OCULTAMOS EL GATITO Y EL BOTÓN DE DEPLOY */
+    /* 1. OCULTAMOS TODO EL MENÚ SUPERIOR (GitHub, Editar, Deploy) */
+    header {visibility: hidden !important;}
+    [data-testid="stHeader"] {background: transparent !important; display: none !important;}
     [data-testid="stToolbar"] {display: none !important;}
     .stDeployButton {display: none !important;}
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
+    #MainMenu {visibility: hidden !important;}
+    footer {visibility: hidden !important;}
 
-    /* 3. ARREGLO DE LAS FLECHAS (Chiquita, verde y sin fondo) */
+    /* 2. ARREGLO DE LAS FLECHAS (Chiquita, verde y sin fondo) */
     [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] {
         display: block !important;
         visibility: visible !important;
@@ -78,7 +74,7 @@ st.markdown("""
         height: 24px !important;
     }
     
-    /* 4. ESTILOS GENERALES OSCUROS */
+    /* 3. ESTILOS GENERALES OSCUROS */
     html, body, [data-testid="stAppViewContainer"], .stApp { background-color: #0e1117 !important; color: #ffffff !important; }
     h1, h2, h3, p, span, label { color: #ffffff !important; font-family: 'Helvetica Neue', sans-serif; }
     
@@ -118,10 +114,13 @@ if "historial" not in st.session_state: st.session_state.historial = []
 if "consultas" not in st.session_state: st.session_state.consultas = 0
 if "ultimo_analisis" not in st.session_state: st.session_state.ultimo_analisis = None
 if "partidos_liga" not in st.session_state: st.session_state.partidos_liga = []
-if "liga_actual" not in st.session_state: st.session_state.liga_actual = "LigaPro (Ecuador)"
+if "liga_actual" not in st.session_state: st.session_state.liga_actual = "Selecciones / Amistosos"
 if "tokens_totales" not in st.session_state: st.session_state.tokens_totales = 0 
 
+# --- AGREGAMOS LAS OPCIONES DE SELECCIONES ---
 LIGAS_ESPN = {
+    "Selecciones / Amistosos": "fifa.friendly",
+    "Eliminatorias CONMEBOL": "fifa.worldq.conmebol",
     "LigaPro (Ecuador)": "ecu.1", "Champions League": "uefa.champions",
     "LaLiga (España)": "esp.1", "Premier League (Inglaterra)": "eng.1",
     "Serie A (Italia)": "ita.1", "Bundesliga (Alemania)": "ger.1",
@@ -258,7 +257,7 @@ tab1, tab2 = st.tabs(["🧠 Analizador IA", "📺 Marcadores en Vivo (ESPN)"])
 
 # --- PESTAÑA 1 ---
 with tab1:
-    liga_seleccionada = st.selectbox("Selecciona una liga para ver los próximos partidos:", list(LIGAS_ESPN.keys()))
+    liga_seleccionada = st.selectbox("Selecciona una liga o torneo:", list(LIGAS_ESPN.keys()))
     
     if liga_seleccionada != st.session_state.liga_actual:
         st.session_state.liga_actual = liga_seleccionada
@@ -285,12 +284,12 @@ with tab1:
     col1, col2 = st.columns(2)
     with col1:
         local_default = st.session_state.partidos_liga[opciones.index(partido_seleccionado)]['local'] if partido_seleccionado else ""
-        equipo_local = st.text_input("Equipo Local", value=local_default, placeholder="Ej: Barcelona SC")
+        equipo_local = st.text_input("Equipo Local", value=local_default, placeholder="Ej: Argentina")
     with col2:
         visitante_default = st.session_state.partidos_liga[opciones.index(partido_seleccionado)]['visitante'] if partido_seleccionado else ""
-        equipo_visitante = st.text_input("Equipo Visitante", value=visitante_default, placeholder="Ej: Emelec")
+        equipo_visitante = st.text_input("Equipo Visitante", value=visitante_default, placeholder="Ej: Uruguay")
 
-    contexto_extra = st.text_area("Contexto Adicional (Opcional)", placeholder="Ej: Juegan en el Capwell, clima lluvioso...")
+    contexto_extra = st.text_area("Contexto Adicional (Opcional)", placeholder="Ej: El partido va 2-0 en el minuto 60...")
     modo_kalshi = st.checkbox("💡 Activar Modo Kalshi (Análisis para Mercados de Predicción)")
 
     if st.button("🧠 ANALIZAR PARTIDO"):
@@ -322,7 +321,7 @@ with tab1:
         
         st.markdown("---")
         
-        # --- AQUÍ ESTÁ EL ÚNICO CAMBIO (Quitamos Bet593 y Betcris) ---
+        # --- CALCULADORA ---
         st.subheader("🧮 Calculadora de Value Bet")
         st.write("Ingresa los datos de tu casa de apuestas para saber si hay valor.")
         
