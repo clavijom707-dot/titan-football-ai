@@ -37,13 +37,14 @@ if not st.session_state.logged_in:
 # --- DISEÑO VISUAL DEFINITIVO ---
 st.markdown("""
     <style>
-    /* 1. OCULTAMOS TODO EL MENÚ SUPERIOR (GitHub, Editar, Deploy) */
-    header {visibility: hidden !important;}
-    [data-testid="stHeader"] {background: transparent !important; display: none !important;}
-    [data-testid="stToolbar"] {display: none !important;}
-    .stDeployButton {display: none !important;}
-    #MainMenu {visibility: hidden !important;}
-    footer {visibility: hidden !important;}
+    /* 1. OCULTAMOS TODO EL MENÚ SUPERIOR (A PRUEBA DE BALAS) */
+    header, #MainMenu, footer, [data-testid="stToolbar"], [data-testid="stDecoration"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    [data-testid="stAppViewContainer"] > .main {
+        padding-top: 0px !important; /* Quitamos el espacio en blanco de arriba */
+    }
 
     /* 2. ARREGLO DE LAS FLECHAS (Chiquita, verde y sin fondo) */
     [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] {
